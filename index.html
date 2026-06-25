@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>YeGlobe - News</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitcount:wght@100..900&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:"Bitcount", sans-serif;
+}
+
+body{
+background:#000;
+color:#fff;
+display:flex;
+height:100vh;
+}
+
+
+.sidebar{
+width:240px;
+background:#0a0a0a;
+border-right:1px solid #1a1a1a;
+padding:20px;
+}
+
+.logo{
+font-size:28px;
+margin-bottom:20px;
+}
+
+.nav{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.nav a{
+color:#aaa;
+text-decoration:none;
+padding:10px;
+border-radius:10px;
+transition:0.2s;
+}
+
+.nav a:hover{
+background:#111;
+color:#fff;
+}
+
+
+.main{
+flex:1;
+padding:20px;
+overflow:auto;
+}
+
+.news-header{
+font-size:26px;
+margin-bottom:15px;
+}
+
+.news-card{
+background:#0d0d0d;
+border:1px solid #1a1a1a;
+padding:15px;
+border-radius:12px;
+margin-bottom:15px;
+cursor:pointer;
+transition:0.25s ease;
+}
+
+.news-card.expanded{
+transform:scale(1.03);
+background:#111;
+border:1px solid #333;
+z-index:10;
+}
+
+.news-title{
+font-size:18px;
+margin-bottom:5px;
+}
+
+.news-meta{
+font-size:12px;
+color:#888;
+margin-bottom:10px;
+}
+
+.news-text{
+color:#ccc;
+font-size:14px;
+}
+
+.news-card.expanded .news-title{
+font-size:22px;
+}
+
+.news-card.expanded .news-text{
+font-size:15px;
+color:#fff;
+}
+
+
+.right{
+width:260px;
+border-left:1px solid #1a1a1a;
+padding:20px;
+background:#0a0a0a;
+}
+
+
+#floatingBtn{
+position:fixed;
+bottom:20px;
+right:20px;
+width:60px;
+height:60px;
+background:#000;
+border-radius:16px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+z-index:9999;
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+transition:0.4s ease;
+}
+
+#floatingBtn img{
+width:28px;
+height:28px;
+}
+
+
+#floatingPanel{
+position:fixed;
+bottom:20px;
+right:20px;
+width:60px;
+height:60px;
+background:rgba(0,0,0,0.6);
+backdrop-filter: blur(12px);
+border-radius:16px;
+overflow:hidden;
+z-index:9998;
+opacity:0;
+pointer-events:none;
+transition:0.4s ease;
+box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+
+#floatingPanel.open{
+width:600px;
+height:420px;
+opacity:1;
+pointer-events:auto;
+border:1px solid rgba(255,255,255,0.08);
+}
+
+.panel-inner{
+width:100%;
+height:100%;
+}
+
+.panel-inner iframe{
+width:100%;
+height:100%;
+border:none;
+}
+
+#floatingBtn.open{
+transform:scale(0);
+opacity:0;
+}
+</style>
+</head>
+
+<body>
+
+
+<div class="sidebar">
+<div class="logo">YeGlobe</div>
+
+<div class="nav">
+<a href="index.html">News</a>
+<a href="#">WIP</a>
+<a href="#">WIP</a>
+<a href="#">WIP</a>
+<a href="#">WIP</a>
+</div>
+</div>
+
+
+<div class="main">
+<div class="news-header">News</div>
+<div id="newsContainer"></div>
+</div>
+
+
+<div class="right">
+<h3>Created by MatthewMason</h3>
+<p style="color:#888;font-size:13px;margin-top:10px;">
+2026 STRATOSPHERIC. All rights reserved.
+</p>
+</div>
+
+
+<div id="floatingBtn" onclick="togglePanel()">
+  <img src="icon.png" alt="open" />
+</div>
+
+
+<div id="floatingPanel">
+  <div class="panel-inner">
+    <iframe src="https://organizations.minnit.chat/414817930500447/YeChat"></iframe>
+  </div>
+</div>
+
+<script>
+let expandedCard = null;
+
+function truncateText(text, wordLimit = 14) {
+  const words = text.split(" ");
+  if (words.length <= wordLimit) return text;
+  return words.slice(0, wordLimit).join(" ") + "...";
+}
+
+async function loadNews(){
+  const res = await fetch("https://api.jsonbin.io/v3/b/6a3da110f5f4af5e293144c0", {
+    headers: {
+      "X-Master-Key": "$2a$10$RqGh96Dep2FVNYRNUNlUj.WMGiaShLhjJ/1UhWxMw30MDTu1qsjfW"
+    }
+  });
+
+  const json = await res.json();
+  const data = json.record;
+
+  const container = document.getElementById("newsContainer");
+  container.innerHTML = "";
+
+  data.news.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  data.news.forEach(item => {
+
+    const div = document.createElement("div");
+    div.className = "news-card";
+
+    const fullText = item.content;
+    const shortText = truncateText(fullText, 14);
+
+    const textEl = document.createElement("div");
+    textEl.className = "news-text";
+    textEl.dataset.full = fullText;
+    textEl.dataset.short = shortText;
+    textEl.textContent = shortText;
+
+    div.innerHTML = `
+      <div class="news-title">${item.title}</div>
+      <div class="news-meta">${item.date} • ${item.source}</div>
+    `;
+
+    div.appendChild(textEl);
+
+    div.addEventListener("click", () => {
+
+      if (expandedCard && expandedCard !== div) {
+        expandedCard.classList.remove("expanded");
+        const prevText = expandedCard.querySelector(".news-text");
+        if (prevText) prevText.textContent = prevText.dataset.short;
+      }
+
+      const isExpanded = div.classList.toggle("expanded");
+
+      if (isExpanded) {
+        textEl.textContent = textEl.dataset.full;
+        expandedCard = div;
+      } else {
+        textEl.textContent = textEl.dataset.short;
+        expandedCard = null;
+      }
+    });
+
+    container.appendChild(div);
+  });
+}
+
+function togglePanel(){
+  document.getElementById("floatingBtn").classList.toggle("open");
+  document.getElementById("floatingPanel").classList.toggle("open");
+}
+
+loadNews();
+</script>
+
+</body>
+</html>
